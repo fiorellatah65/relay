@@ -1,95 +1,4 @@
-// // src/app/page.tsx
-// 'use client';
-
-// import { useEffect, useState } from 'react';
-// import { useRouter } from 'next/navigation';
-// import { supabase } from '@/lib/supabase';
-
-// export default function Home() {
-//   const router = useRouter();
-//   const [loading, setLoading] = useState(true);
-
-//   useEffect(() => {
-//     const checkUserAndRedirect = async () => {
-//       try {
-//         // Obtiene sesión actual
-//         const { data: { session } } = await supabase.auth.getSession();
-        
-//         // Si no hay sesión, redirige a login
-//         if (!session) {
-//           router.push('/auth/login');
-//           return;
-//         }
-
-//         // Obtiene el rol del usuario desde la DB
-//         const { data: profile, error } = await supabase
-//           .from('profiles')
-//           .select('role')
-//           .eq('id', session.user.id)
-//           .single();
-
-//         if (error) {
-//           console.error('Error obteniendo perfil:', error);
-//           router.push('/auth/login');
-//           return;
-//         }
-
-//         // Redirige basado en rol
-//         if (profile?.role === 'admin') {
-//           router.push('/dashboard/admin');
-//         } else if (profile?.role === 'operador') {
-//           router.push('/dashboard/operador');
-//         } else if (profile?.role === 'supervisor') {
-//           router.push('/dashboard/supervisor');
-//         } else {
-//           // Si no tiene rol válido
-//           router.push('/auth/login');
-//         }
-//       } catch (error) {
-//         console.error('Error en verificación:', error);
-//         router.push('/auth/login');
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-
-//     checkUserAndRedirect();
-
-//     // Escucha cambios de autenticación
-//     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-//       if (event === 'SIGNED_IN') {
-//         // Cuando se inicia sesión, recarga la página para verificar rol
-//         window.location.reload();
-//       } else if (event === 'SIGNED_OUT') {
-//         router.push('/auth/login');
-//       }
-//     });
-
-//     // Cleanup subscription
-//     return () => subscription.unsubscribe();
-//   }, [router]);
-
-//   // Mostrar loading mientras verifica
-//   if (loading) {
-//     return (
-//       <div className="flex min-h-screen items-center justify-center">
-//         <div className="text-center">
-//           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-//           <p className="mt-4">Verificando sesión...</p>
-//         </div>
-//       </div>
-//     );
-//   }
-
-//   // Este return nunca debería ejecutarse porque siempre redirige
-//   return (
-//     <div className="flex min-h-screen items-center justify-center">
-//       <div>Redirigiendo...</div>
-//     </div>
-//   );
-// }
-
-
+// // // src/app/page.tsx
 // 'use client';
 // import React, { useState, useEffect } from 'react';
 // import { supabase } from '@/lib/supabase';
@@ -101,12 +10,14 @@
 //   Eye, 
 //   ChevronRight,
 //   LogIn,
-//   UserPlus
+//   UserPlus,
+//   Settings
 // } from 'lucide-react';
 
 // export default function LandingPage() {
 //   const router = useRouter();
-//   const [session, setSession] = useState(null);
+//   const [session, setSession] = useState<any>(null);
+//   const [userProfile, setUserProfile] = useState<any>(null);
 //   const [loading, setLoading] = useState(true);
 
 //   useEffect(() => {
@@ -115,8 +26,12 @@
 
 //     // Escuchar cambios de autenticación
 //     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-//       // me aparece en rojo la palabra session
-//       setSession(session as any);
+//       setSession(session);
+//       if (session) {
+//         loadUserProfile(session.user.id);
+//       } else {
+//         setUserProfile(null);
+//       }
 //     });
 
 //     return () => subscription.unsubscribe();
@@ -125,30 +40,51 @@
 //   const checkSession = async () => {
 //     try {
 //       const { data: { session } } = await supabase.auth.getSession();
-//       // me aparece en rojo la palabra session
-
-//       setSession(session as any);
+//       setSession(session);
       
-//       // Si ya está autenticado, redirigir al dashboard correspondiente
 //       if (session) {
-//         const { data: profile } = await supabase
-//           .from('profiles')
-//           .select('role')
-//           .eq('id', session.user.id)
-//           .single();
-
-//         if (profile?.role === 'admin') {
-//           router.push('/dashboard/admin');
-//         } else if (profile?.role === 'supervisor') {
-//           router.push('/dashboard/supervisor');
-//         } else if (profile?.role === 'operador') {
-//           router.push('/dashboard/operador');
-//         }
+//         await loadUserProfile(session.user.id);
 //       }
 //     } catch (error) {
 //       console.error('Error verificando sesión:', error);
 //     } finally {
 //       setLoading(false);
+//     }
+//   };
+
+//   const loadUserProfile = async (userId: string) => {
+//     try {
+//       const { data: profile } = await supabase
+//         .from('profiles')
+//         .select('role')
+//         .eq('id', userId)
+//         .single();
+
+//       setUserProfile(profile);
+//     } catch (error) {
+//       console.error('Error cargando perfil:', error);
+//     }
+//   };
+
+//   const handleGotoDashboard = () => {
+//     if (userProfile?.role === 'admin') {
+//       router.push('/dashboard/admin');
+//     } else if (userProfile?.role === 'supervisor') {
+//       router.push('/dashboard/supervisor');
+//     } else if (userProfile?.role === 'operador') {
+//       router.push('/dashboard/operador');
+//     } else {
+//       router.push('/dashboard');
+//     }
+//   };
+
+//   const handleLogout = async () => {
+//     try {
+//       await supabase.auth.signOut();
+//       setSession(null);
+//       setUserProfile(null);
+//     } catch (error) {
+//       console.error('Error cerrando sesión:', error);
 //     }
 //   };
 
@@ -171,22 +107,47 @@
 //               <h1 className="text-xl font-bold text-gray-900">Inventario Integridad</h1>
 //             </div>
             
-//             {/* Botones de autenticación */}
+//             {/* Botones dinámicos según estado de autenticación */}
 //             <div className="flex space-x-3">
-//               <button
-//                 onClick={() => router.push('/auth/login')}
-//                 className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2 transition-colors"
-//               >
-//                 <LogIn className="w-4 h-4" />
-//                 <span>Iniciar Sesión</span>
-//               </button>
-//               <button
-//                 onClick={() => router.push('/auth/register')}
-//                 className="border border-blue-600 text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 flex items-center space-x-2 transition-colors"
-//               >
-//                 <UserPlus className="w-4 h-4" />
-//                 <span>Registrarse</span>
-//               </button>
+//               {session && userProfile ? (
+//                 // Usuario autenticado
+//                 <>
+//                   <span className="text-sm text-gray-600 flex items-center">
+//                     Bienvenido, {session.user.email}
+//                   </span>
+//                   <button
+//                     onClick={handleGotoDashboard}
+//                     className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2 transition-colors"
+//                   >
+//                     <Settings className="w-4 h-4" />
+//                     <span>Ir al Dashboard</span>
+//                   </button>
+//                   <button
+//                     onClick={handleLogout}
+//                     className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+//                   >
+//                     Cerrar Sesión
+//                   </button>
+//                 </>
+//               ) : (
+//                 // Usuario no autenticado
+//                 <>
+//                   <button
+//                     onClick={() => router.push('/auth/login')}
+//                     className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2 transition-colors"
+//                   >
+//                     <LogIn className="w-4 h-4" />
+//                     <span>Iniciar Sesión</span>
+//                   </button>
+//                   <button
+//                     onClick={() => router.push('/auth/register')}
+//                     className="border border-blue-600 text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 flex items-center space-x-2 transition-colors"
+//                   >
+//                     <UserPlus className="w-4 h-4" />
+//                     <span>Registrarse</span>
+//                   </button>
+//                 </>
+//               )}
 //             </div>
 //           </div>
 //         </div>
@@ -205,13 +166,23 @@
 //           </p>
           
 //           <div className="flex justify-center space-x-4">
-//             <button
-//               onClick={() => router.push('/auth/login')}
-//               className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 flex items-center space-x-2 text-lg font-medium transition-colors"
-//             >
-//               <span>Comenzar Ahora</span>
-//               <ChevronRight className="w-5 h-5" />
-//             </button>
+//             {session && userProfile ? (
+//               <button
+//                 onClick={handleGotoDashboard}
+//                 className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 flex items-center space-x-2 text-lg font-medium transition-colors"
+//               >
+//                 <span>Ir al Dashboard</span>
+//                 <ChevronRight className="w-5 h-5" />
+//               </button>
+//             ) : (
+//               <button
+//                 onClick={() => router.push('/auth/login')}
+//                 className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 flex items-center space-x-2 text-lg font-medium transition-colors"
+//               >
+//                 <span>Comenzar Ahora</span>
+//                 <ChevronRight className="w-5 h-5" />
+//               </button>
+//             )}
 //           </div>
 //         </div>
 
@@ -321,11 +292,11 @@
 //     </div>
 //   );
 // }
-
 'use client';
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import { Session } from '@supabase/supabase-js';
 import { 
   Shield, 
   Users, 
@@ -337,10 +308,18 @@ import {
   Settings
 } from 'lucide-react';
 
+// Definir la interfaz para el perfil del usuario
+interface UserProfile {
+  role: string;
+  // Agrega otros campos que existan en la tabla 'profiles'
+  full_name?: string;
+  is_active?: boolean;
+}
+
 export default function LandingPage() {
   const router = useRouter();
-  const [session, setSession] = useState<any>(null);
-  const [userProfile, setUserProfile] = useState<any>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -368,7 +347,7 @@ export default function LandingPage() {
       if (session) {
         await loadUserProfile(session.user.id);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error verificando sesión:', error);
     } finally {
       setLoading(false);
@@ -377,14 +356,16 @@ export default function LandingPage() {
 
   const loadUserProfile = async (userId: string) => {
     try {
-      const { data: profile } = await supabase
+      const { data: profile, error } = await supabase
         .from('profiles')
-        .select('role')
+        .select('role, full_name, is_active')
         .eq('id', userId)
         .single();
 
+      if (error) throw error;
+
       setUserProfile(profile);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error cargando perfil:', error);
     }
   };
@@ -406,7 +387,7 @@ export default function LandingPage() {
       await supabase.auth.signOut();
       setSession(null);
       setUserProfile(null);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error cerrando sesión:', error);
     }
   };
