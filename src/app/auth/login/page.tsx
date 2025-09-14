@@ -448,15 +448,16 @@
 
 
 // app/auth/login/page.tsx
+// app/auth/login/page.tsx
 'use client';
 
 import { useForm } from 'react-hook-form';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 
 type FormData = { 
@@ -464,7 +465,8 @@ type FormData = {
   password: string; 
 };
 
-export default function Login() {
+// Componente separado que usa useSearchParams
+function LoginForm() {
   const form = useForm<FormData>({
     defaultValues: {
       email: '',
@@ -473,12 +475,11 @@ export default function Login() {
   });
   
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
-  // Verificar autenticación existente
+  // Verificar autenticación existente sin useSearchParams
   useEffect(() => {
     let mounted = true;
 
@@ -494,16 +495,8 @@ export default function Login() {
         if (session && mounted) {
           console.log('Sesión existente encontrada, redirigiendo...');
           
-          // Forzar redirección inmediata sin consultar perfil
-          const redirectedFrom = searchParams?.get('redirectedFrom');
-          let redirectPath = '/dashboard/admin'; // Default para testing
-          
-          if (redirectedFrom) {
-            redirectPath = redirectedFrom;
-          }
-          
-          // Usar window.location para evitar problemas de middleware
-          window.location.href = redirectPath;
+          // Forzar redirección a dashboard admin por defecto
+          window.location.href = '/dashboard/admin';
           return;
         }
       } catch (err) {
@@ -520,7 +513,7 @@ export default function Login() {
     return () => {
       mounted = false;
     };
-  }, [searchParams]);
+  }, []);
 
   const onSubmit = async (data: FormData) => {
     setIsLoading(true);
@@ -565,7 +558,7 @@ export default function Login() {
       await new Promise(resolve => setTimeout(resolve, 500));
 
       // Intentar obtener perfil con múltiples estrategias
-      let userRole = 'operador'; // Default
+      let redirectPath = '/dashboard/admin'; // Default para admin
       
       try {
         // Estrategia 1: Consulta directa
@@ -576,8 +569,7 @@ export default function Login() {
           .single();
 
         if (profile && !profileError) {
-          userRole = profile.role || 'operador';
-          console.log('Rol obtenido:', userRole);
+          console.log('Rol obtenido:', profile.role);
           
           // Verificar si está activo
           if (profile.is_active === false) {
@@ -585,35 +577,27 @@ export default function Login() {
             setError('Tu cuenta está desactivada. Contacta al administrador.');
             return;
           }
+
+          // Determinar ruta según rol
+          switch (profile.role) {
+            case 'admin':
+              redirectPath = '/dashboard/admin';
+              break;
+            case 'supervisor':
+              redirectPath = '/dashboard/supervisor';
+              break;
+            case 'operador':
+              redirectPath = '/dashboard/operador';
+              break;
+            default:
+              redirectPath = '/dashboard';
+          }
         } else {
-          console.warn('No se pudo obtener perfil:', profileError?.message);
-          // Usar rol por defecto
+          console.warn('No se pudo obtener perfil, usando default admin');
         }
       } catch (profileErr) {
         console.warn('Error obteniendo perfil:', profileErr);
-        // Continuar con rol por defecto
-      }
-
-      // Determinar ruta de redirección
-      const redirectedFrom = searchParams?.get('redirectedFrom');
-      let redirectPath = '/dashboard';
-
-      if (redirectedFrom) {
-        redirectPath = redirectedFrom;
-      } else {
-        switch (userRole) {
-          case 'admin':
-            redirectPath = '/dashboard/admin';
-            break;
-          case 'supervisor':
-            redirectPath = '/dashboard/supervisor';
-            break;
-          case 'operador':
-            redirectPath = '/dashboard/operador';
-            break;
-          default:
-            redirectPath = '/dashboard';
-        }
+        // Continuar con ruta por defecto
       }
 
       console.log('Redirigiendo a:', redirectPath);
@@ -725,24 +709,31 @@ export default function Login() {
           </form>
         </Form>
 
-        <div className="text-center space-y-2">
+        <div className="text-center">
           <Link 
             href="/" 
-            className="text-sm text-blue-600 hover:text-blue-500 block"
+            className="text-sm text-blue-600 hover:text-blue-500"
           >
             Volver al inicio
           </Link>
-          
-          {/* Información de debug en desarrollo */}
-          {process.env.NODE_ENV === 'development' && (
-            <div className="text-xs text-gray-500 mt-4 p-2 bg-gray-50 rounded">
-              <p>Debug Info:</p>
-              <p>URL: {process.env.NEXT_PUBLIC_SUPABASE_URL}</p>
-              <p>Anon Key: {process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'Present' : 'Missing'}</p>
-            </div>
-          )}
         </div>
       </div>
     </div>
+  );
+}
+
+// Componente principal con Suspense
+export default function Login() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-2 text-sm text-gray-600">Cargando...</p>
+        </div>
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   );
 }
