@@ -14,11 +14,12 @@ import {
   Settings
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-
+import { Session } from '@supabase/supabase-js';
 export default function LandingPage() {
   const router = useRouter();
-  const [session, setSession] = useState<any>(null);
-  const [userProfile, setUserProfile] = useState<any>(null);
+const [session, setSession] = useState<Session | null>(null);
+const [userProfile, setUserProfile] = useState<{ role: string } | null>(null);
+
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

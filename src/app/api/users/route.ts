@@ -667,12 +667,13 @@ export async function POST(request: NextRequest) {
       }
     }, { status: 201 });
 
-  } catch (error: any) {
-    console.error('Error in POST /api/users:', error);
-    const statusCode = error.message.includes('email') ? 400 : 500;
-    return NextResponse.json({ 
-      error: error.message || 'Error creando usuario'
-    }, { status: statusCode });
+} catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+          console.error('Error:', errorMessage);
+          return NextResponse.json({ 
+            error: 'Error interno del servidor', 
+            details: errorMessage 
+    }, { status: 500 });
   }
 }
 
@@ -712,10 +713,12 @@ export async function PUT(request: NextRequest) {
 
     console.log('User updated successfully');
     return NextResponse.json({ success: true });
-  } catch (error: any) {
+  } catch (error:  unknown) {
+  const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
     console.error('Error in PUT /api/users:', error);
-    return NextResponse.json({ 
-      error: error.message || 'Error actualizando usuario' 
+  return NextResponse.json({ 
+    error: 'Error interno del servidor', 
+    details: errorMessage  
     }, { status: 500 });
   }
 }
@@ -759,10 +762,15 @@ export async function DELETE(request: NextRequest) {
 
     console.log('User deleted successfully');
     return NextResponse.json({ success: true });
-  } catch (error: any) {
+  } catch (error:  unknown) {
+  const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
     console.error('Error in DELETE /api/users:', error);
     return NextResponse.json({ 
-      error: error.message || 'Error eliminando usuario' 
+
+    error: 'Error eliminando usuario', 
+        details: errorMessage 
+
+
     }, { status: 500 });
   }
 }
