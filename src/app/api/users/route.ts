@@ -402,12 +402,13 @@ export async function GET(request: NextRequest) {
 
     console.log('Combined users:', users.length);
     return NextResponse.json({ users });
-  } catch (error: any) {
-    console.error('Error in GET /api/users:', error);
-    return NextResponse.json({ 
-      error: 'Error interno del servidor', 
-      details: error.message 
-    }, { status: 500 });
+  } catch (error: unknown) {
+ console.error('Error in GET /api/users:', error);
+  const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+  return NextResponse.json({ 
+    error: 'Error interno del servidor', 
+    details: errorMessage 
+  }, { status: 500 });
   }
 }
 
