@@ -410,6 +410,7 @@ export default function AdminDashboard() {
                 <p className="text-xs text-gray-500 mt-1">CRUD completo</p>
               </button>
               
+           {/* // En tu archivo src/app/dashboard/admin/page.tsx, actualiza el botón: */}
               <button 
                 onClick={() => navigateTo('/dashboard/admin/usuarios')}
                 className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 hover:bg-gray-50 transition-colors"
@@ -506,3 +507,4 @@ export default function AdminDashboard() {
     </div>
   );
 }
+

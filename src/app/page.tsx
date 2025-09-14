@@ -1,7 +1,7 @@
 // // src/app/page.tsx
 'use client';
 import React, { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+// import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { 
   Shield, 
@@ -13,6 +13,7 @@ import {
   UserPlus,
   Settings
 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 export default function LandingPage() {
   const router = useRouter();
