@@ -1,0 +1,152 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+  // output   = "../src/generated/prisma"
+   output   = "node_modules/@prisma/client"
+   
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+// Tabla de Usuarios (sincronizada con Clerk)
+model Usuario {
+  id            String   @id @default(cuid())
+  clerkId       String   @unique
+  email         String   @unique
+  nombre        String?
+  apellido      String?
+  rol           RolUsuario @default(OPERADOR)
+  activo        Boolean  @default(true)
+  fechaCreacion DateTime @default(now())
+  fechaUpdate   DateTime @updatedAt
+  
+  // Relaciones
+  movimientosCreados MovimientoInventario[] @relation("UsuarioCreador")
+  auditoriasRealizadas AuditoriaLog[] @relation("UsuarioAuditor")
+  
+  @@map("usuarios")
+}
+
+// Tipos de Roles del Sistema
+enum RolUsuario {
+  ADMINISTRADOR  // Control total del sistema
+  SUPERVISOR     // Supervisión y reportes
+  OPERADOR      // Operaciones básicas de inventario
+}
+
+// Tabla principal de Inventario
+model Inventario {
+  id                String   @id @default(cuid())
+  codigo            String   @unique
+  nombre            String
+  descripcion       String?
+  categoria         String
+  ubicacion         String
+  stockMinimo       Int      @default(0)
+  stockMaximo       Int      @default(1000)
+  stockActual       Int      @default(0)
+  valorUnitario     Decimal  @db.Decimal(10,2)
+  valorTotal        Decimal  @db.Decimal(12,2)
+  estado            EstadoItem @default(ACTIVO)
+  fechaAdquisicion  DateTime?
+  fechaCreacion     DateTime @default(now())
+  fechaUpdate       DateTime @updatedAt
+  
+  // Relaciones
+  movimientos       MovimientoInventario[]
+  alertas          AlertaInventario[]
+  
+  @@map("inventario")
+}
+
+enum EstadoItem {
+  ACTIVO
+  INACTIVO  
+  MANTENIMIENTO
+  BAJA
+}
+
+// Registro de todos los movimientos de inventario
+model MovimientoInventario {
+  id            String   @id @default(cuid())
+  inventarioId  String
+  tipoMovimiento TipoMovimiento
+  cantidad      Int
+  cantidadAnterior Int
+  cantidadNueva    Int
+  motivo        String
+  observaciones String?
+  usuarioId     String
+  ipAddress     String?
+  userAgent     String?
+  fecha         DateTime @default(now())
+  
+  // Relaciones
+  inventario    Inventario @relation(fields: [inventarioId], references: [id])
+  usuario       Usuario    @relation("UsuarioCreador", fields: [usuarioId], references: [clerkId])
+  
+  @@map("movimientos_inventario")
+}
+
+enum TipoMovimiento {
+  ENTRADA
+  SALIDA
+  AJUSTE
+  TRANSFERENCIA
+  BAJA
+}
+
+// Sistema de alertas automáticas
+model AlertaInventario {
+  id            String   @id @default(cuid())
+  inventarioId  String
+  tipoAlerta    TipoAlerta
+  mensaje       String
+  nivelCritico  Boolean  @default(false)
+  leida         Boolean  @default(false)
+  fechaCreacion DateTime @default(now())
+  fechaLeida    DateTime?
+  
+  // Relaciones
+  inventario    Inventario @relation(fields: [inventarioId], references: [id])
+  
+  @@map("alertas_inventario")
+}
+
+enum TipoAlerta {
+  STOCK_BAJO
+  STOCK_CRITICO
+  STOCK_ALTO
+  MOVIMIENTO_SOSPECHOSO
+  ERROR_SISTEMA
+}
+
+// Log de auditoría completo (SCI - Supervisión)
+model AuditoriaLog {
+  id            String   @id @default(cuid())
+  accion        String
+  tabla         String
+  registroId    String?
+  datosAnteriores Json?
+  datosNuevos     Json?
+  usuarioId     String
+  ipAddress     String?
+  userAgent     String?
+  resultado     String   @default("EXITOSO")
+  fecha         DateTime @default(now())
+  
+  // Relaciones
+  usuario       Usuario @relation("UsuarioAuditor", fields: [usuarioId], references: [clerkId])
+  
+  @@map("auditoria_log")
+}

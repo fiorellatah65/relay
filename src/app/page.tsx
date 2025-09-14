@@ -1,102 +1,616 @@
-import Image from "next/image";
+// // src/app/page.tsx
+// 'use client';
 
-export default function Home() {
+// import { useEffect, useState } from 'react';
+// import { useRouter } from 'next/navigation';
+// import { supabase } from '@/lib/supabase';
+
+// export default function Home() {
+//   const router = useRouter();
+//   const [loading, setLoading] = useState(true);
+
+//   useEffect(() => {
+//     const checkUserAndRedirect = async () => {
+//       try {
+//         // Obtiene sesión actual
+//         const { data: { session } } = await supabase.auth.getSession();
+        
+//         // Si no hay sesión, redirige a login
+//         if (!session) {
+//           router.push('/auth/login');
+//           return;
+//         }
+
+//         // Obtiene el rol del usuario desde la DB
+//         const { data: profile, error } = await supabase
+//           .from('profiles')
+//           .select('role')
+//           .eq('id', session.user.id)
+//           .single();
+
+//         if (error) {
+//           console.error('Error obteniendo perfil:', error);
+//           router.push('/auth/login');
+//           return;
+//         }
+
+//         // Redirige basado en rol
+//         if (profile?.role === 'admin') {
+//           router.push('/dashboard/admin');
+//         } else if (profile?.role === 'operador') {
+//           router.push('/dashboard/operador');
+//         } else if (profile?.role === 'supervisor') {
+//           router.push('/dashboard/supervisor');
+//         } else {
+//           // Si no tiene rol válido
+//           router.push('/auth/login');
+//         }
+//       } catch (error) {
+//         console.error('Error en verificación:', error);
+//         router.push('/auth/login');
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+
+//     checkUserAndRedirect();
+
+//     // Escucha cambios de autenticación
+//     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+//       if (event === 'SIGNED_IN') {
+//         // Cuando se inicia sesión, recarga la página para verificar rol
+//         window.location.reload();
+//       } else if (event === 'SIGNED_OUT') {
+//         router.push('/auth/login');
+//       }
+//     });
+
+//     // Cleanup subscription
+//     return () => subscription.unsubscribe();
+//   }, [router]);
+
+//   // Mostrar loading mientras verifica
+//   if (loading) {
+//     return (
+//       <div className="flex min-h-screen items-center justify-center">
+//         <div className="text-center">
+//           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+//           <p className="mt-4">Verificando sesión...</p>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   // Este return nunca debería ejecutarse porque siempre redirige
+//   return (
+//     <div className="flex min-h-screen items-center justify-center">
+//       <div>Redirigiendo...</div>
+//     </div>
+//   );
+// }
+
+
+// 'use client';
+// import React, { useState, useEffect } from 'react';
+// import { supabase } from '@/lib/supabase';
+// import { useRouter } from 'next/navigation';
+// import { 
+//   Shield, 
+//   Users, 
+//   FileText, 
+//   Eye, 
+//   ChevronRight,
+//   LogIn,
+//   UserPlus
+// } from 'lucide-react';
+
+// export default function LandingPage() {
+//   const router = useRouter();
+//   const [session, setSession] = useState(null);
+//   const [loading, setLoading] = useState(true);
+
+//   useEffect(() => {
+//     // Verificar si ya hay una sesión activa
+//     checkSession();
+
+//     // Escuchar cambios de autenticación
+//     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+//       // me aparece en rojo la palabra session
+//       setSession(session as any);
+//     });
+
+//     return () => subscription.unsubscribe();
+//   }, []);
+
+//   const checkSession = async () => {
+//     try {
+//       const { data: { session } } = await supabase.auth.getSession();
+//       // me aparece en rojo la palabra session
+
+//       setSession(session as any);
+      
+//       // Si ya está autenticado, redirigir al dashboard correspondiente
+//       if (session) {
+//         const { data: profile } = await supabase
+//           .from('profiles')
+//           .select('role')
+//           .eq('id', session.user.id)
+//           .single();
+
+//         if (profile?.role === 'admin') {
+//           router.push('/dashboard/admin');
+//         } else if (profile?.role === 'supervisor') {
+//           router.push('/dashboard/supervisor');
+//         } else if (profile?.role === 'operador') {
+//           router.push('/dashboard/operador');
+//         }
+//       }
+//     } catch (error) {
+//       console.error('Error verificando sesión:', error);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   if (loading) {
+//     return (
+//       <div className="flex min-h-screen items-center justify-center">
+//         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+//       </div>
+//     );
+//   }
+
+//   return (
+//     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+//       {/* Header */}
+//       <header className="bg-white shadow-sm">
+//         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+//           <div className="flex justify-between items-center py-4">
+//             <div className="flex items-center">
+//               <Shield className="h-8 w-8 text-blue-600 mr-3" />
+//               <h1 className="text-xl font-bold text-gray-900">Inventario Integridad</h1>
+//             </div>
+            
+//             {/* Botones de autenticación */}
+//             <div className="flex space-x-3">
+//               <button
+//                 onClick={() => router.push('/auth/login')}
+//                 className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2 transition-colors"
+//               >
+//                 <LogIn className="w-4 h-4" />
+//                 <span>Iniciar Sesión</span>
+//               </button>
+//               <button
+//                 onClick={() => router.push('/auth/register')}
+//                 className="border border-blue-600 text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 flex items-center space-x-2 transition-colors"
+//               >
+//                 <UserPlus className="w-4 h-4" />
+//                 <span>Registrarse</span>
+//               </button>
+//             </div>
+//           </div>
+//         </div>
+//       </header>
+
+//       {/* Hero Section */}
+//       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+//         <div className="py-16 text-center">
+//           <h2 className="text-4xl font-bold text-gray-900 mb-4">
+//             Sistema de Gestión de Inventario
+//           </h2>
+//           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+//             Solución integral para el control y supervisión del inventario universitario, 
+//             implementando los componentes del Sistema de Control Interno (SCI) para garantizar 
+//             la integridad de los datos y la protección de los recursos del Estado.
+//           </p>
+          
+//           <div className="flex justify-center space-x-4">
+//             <button
+//               onClick={() => router.push('/auth/login')}
+//               className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 flex items-center space-x-2 text-lg font-medium transition-colors"
+//             >
+//               <span>Comenzar Ahora</span>
+//               <ChevronRight className="w-5 h-5" />
+//             </button>
+//           </div>
+//         </div>
+
+//         {/* Features Section */}
+//         <div className="py-16">
+//           <h3 className="text-2xl font-bold text-gray-900 text-center mb-12">
+//             Componentes del Sistema de Control Interno
+//           </h3>
+          
+//           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+//             {/* Eje Cultura Organizacional */}
+//             <div className="bg-white rounded-lg shadow-lg p-6">
+//               <div className="flex items-center mb-4">
+//                 <Users className="h-8 w-8 text-blue-600 mr-3" />
+//                 <h4 className="text-lg font-semibold text-gray-900">Cultura Organizacional</h4>
+//               </div>
+//               <p className="text-gray-600 mb-4">
+//                 Sistema de roles y permisos basado en segregación de funciones para promover 
+//                 una cultura de honestidad y comunicación efectiva.
+//               </p>
+//               <ul className="text-sm text-gray-500 space-y-2">
+//                 <li>• Gestión de usuarios por roles</li>
+//                 <li>• Controles de acceso</li>
+//                 <li>• Comunicación segura</li>
+//               </ul>
+//             </div>
+
+//             {/* Eje Gestión de Riesgos */}
+//             <div className="bg-white rounded-lg shadow-lg p-6">
+//               <div className="flex items-center mb-4">
+//                 <Shield className="h-8 w-8 text-green-600 mr-3" />
+//                 <h4 className="text-lg font-semibold text-gray-900">Gestión de Riesgos</h4>
+//               </div>
+//               <p className="text-gray-600 mb-4">
+//                 Validaciones automáticas y alertas en tiempo real para prevenir errores 
+//                 y proteger los recursos del Estado.
+//               </p>
+//               <ul className="text-sm text-gray-500 space-y-2">
+//                 <li>• Validaciones automáticas</li>
+//                 <li>• Alertas de stock bajo</li>
+//                 <li>• Controles preventivos</li>
+//               </ul>
+//             </div>
+
+//             {/* Eje Supervisión */}
+//             <div className="bg-white rounded-lg shadow-lg p-6">
+//               <div className="flex items-center mb-4">
+//                 <Eye className="h-8 w-8 text-purple-600 mr-3" />
+//                 <h4 className="text-lg font-semibold text-gray-900">Supervisión</h4>
+//               </div>
+//               <p className="text-gray-600 mb-4">
+//                 Módulo de auditoría completo que registra todas las acciones para garantizar 
+//                 la rendición de cuentas y supervisión efectiva.
+//               </p>
+//               <ul className="text-sm text-gray-500 space-y-2">
+//                 <li>• Registro de auditoría</li>
+//                 <li>• Trazabilidad completa</li>
+//                 <li>• Reportes de supervisión</li>
+//               </ul>
+//             </div>
+//           </div>
+//         </div>
+
+//         {/* Stats Section */}
+//         <div className="py-16 bg-white rounded-lg shadow-lg mb-16">
+//           <div className="text-center mb-8">
+//             <h3 className="text-2xl font-bold text-gray-900 mb-4">
+//               Diseñado para Entidades Públicas
+//             </h3>
+//             <p className="text-gray-600">
+//               Cumple con los estándares de control interno para el sector público
+//             </p>
+//           </div>
+          
+//           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+//             <div>
+//               <div className="text-3xl font-bold text-blue-600 mb-2">100%</div>
+//               <div className="text-gray-600">Trazabilidad</div>
+//             </div>
+//             <div>
+//               <div className="text-3xl font-bold text-green-600 mb-2">24/7</div>
+//               <div className="text-gray-600">Monitoreo</div>
+//             </div>
+//             <div>
+//               <div className="text-3xl font-bold text-purple-600 mb-2">3 Roles</div>
+//               <div className="text-gray-600">Segregación</div>
+//             </div>
+//           </div>
+//         </div>
+//       </main>
+
+//       {/* Footer */}
+//       <footer className="bg-gray-900 text-white py-8">
+//         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+//           <div className="text-center">
+//             <div className="flex items-center justify-center mb-4">
+//               <Shield className="h-6 w-6 text-blue-400 mr-2" />
+//               <span className="text-lg font-semibold">Inventario Integridad</span>
+//             </div>
+//             <p className="text-gray-400">
+//               Sistema desarrollado para la Facultad de Ingeniería - 
+//               Escuela de Formación Profesional de Sistemas y Computación
+//             </p>
+//           </div>
+//         </div>
+//       </footer>
+//     </div>
+//   );
+// }
+
+'use client';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+import { useRouter } from 'next/navigation';
+import { 
+  Shield, 
+  Users, 
+  FileText, 
+  Eye, 
+  ChevronRight,
+  LogIn,
+  UserPlus,
+  Settings
+} from 'lucide-react';
+
+export default function LandingPage() {
+  const router = useRouter();
+  const [session, setSession] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Verificar si ya hay una sesión activa
+    checkSession();
+
+    // Escuchar cambios de autenticación
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setSession(session);
+      if (session) {
+        loadUserProfile(session.user.id);
+      } else {
+        setUserProfile(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const checkSession = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      setSession(session);
+      
+      if (session) {
+        await loadUserProfile(session.user.id);
+      }
+    } catch (error) {
+      console.error('Error verificando sesión:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadUserProfile = async (userId: string) => {
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', userId)
+        .single();
+
+      setUserProfile(profile);
+    } catch (error) {
+      console.error('Error cargando perfil:', error);
+    }
+  };
+
+  const handleGotoDashboard = () => {
+    if (userProfile?.role === 'admin') {
+      router.push('/dashboard/admin');
+    } else if (userProfile?.role === 'supervisor') {
+      router.push('/dashboard/supervisor');
+    } else if (userProfile?.role === 'operador') {
+      router.push('/dashboard/operador');
+    } else {
+      router.push('/dashboard');
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      setSession(null);
+      setUserProfile(null);
+    } catch (error) {
+      console.error('Error cerrando sesión:', error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      {/* Header */}
+      <header className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center">
+              <Shield className="h-8 w-8 text-blue-600 mr-3" />
+              <h1 className="text-xl font-bold text-gray-900">Inventario Integridad</h1>
+            </div>
+            
+            {/* Botones dinámicos según estado de autenticación */}
+            <div className="flex space-x-3">
+              {session && userProfile ? (
+                // Usuario autenticado
+                <>
+                  <span className="text-sm text-gray-600 flex items-center">
+                    Bienvenido, {session.user.email}
+                  </span>
+                  <button
+                    onClick={handleGotoDashboard}
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2 transition-colors"
+                  >
+                    <Settings className="w-4 h-4" />
+                    <span>Ir al Dashboard</span>
+                  </button>
+                  <button
+                    onClick={handleLogout}
+                    className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    Cerrar Sesión
+                  </button>
+                </>
+              ) : (
+                // Usuario no autenticado
+                <>
+                  <button
+                    onClick={() => router.push('/auth/login')}
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2 transition-colors"
+                  >
+                    <LogIn className="w-4 h-4" />
+                    <span>Iniciar Sesión</span>
+                  </button>
+                  <button
+                    onClick={() => router.push('/auth/register')}
+                    className="border border-blue-600 text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 flex items-center space-x-2 transition-colors"
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    <span>Registrarse</span>
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </header>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+      {/* Hero Section */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="py-16 text-center">
+          <h2 className="text-4xl font-bold text-gray-900 mb-4">
+            Sistema de Gestión de Inventario
+          </h2>
+          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+            Solución integral para el control y supervisión del inventario universitario, 
+            implementando los componentes del Sistema de Control Interno (SCI) para garantizar 
+            la integridad de los datos y la protección de los recursos del Estado.
+          </p>
+          
+          <div className="flex justify-center space-x-4">
+            {session && userProfile ? (
+              <button
+                onClick={handleGotoDashboard}
+                className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 flex items-center space-x-2 text-lg font-medium transition-colors"
+              >
+                <span>Ir al Dashboard</span>
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            ) : (
+              <button
+                onClick={() => router.push('/auth/login')}
+                className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 flex items-center space-x-2 text-lg font-medium transition-colors"
+              >
+                <span>Comenzar Ahora</span>
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Features Section */}
+        <div className="py-16">
+          <h3 className="text-2xl font-bold text-gray-900 text-center mb-12">
+            Componentes del Sistema de Control Interno
+          </h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Eje Cultura Organizacional */}
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <div className="flex items-center mb-4">
+                <Users className="h-8 w-8 text-blue-600 mr-3" />
+                <h4 className="text-lg font-semibold text-gray-900">Cultura Organizacional</h4>
+              </div>
+              <p className="text-gray-600 mb-4">
+                Sistema de roles y permisos basado en segregación de funciones para promover 
+                una cultura de honestidad y comunicación efectiva.
+              </p>
+              <ul className="text-sm text-gray-500 space-y-2">
+                <li>• Gestión de usuarios por roles</li>
+                <li>• Controles de acceso</li>
+                <li>• Comunicación segura</li>
+              </ul>
+            </div>
+
+            {/* Eje Gestión de Riesgos */}
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <div className="flex items-center mb-4">
+                <Shield className="h-8 w-8 text-green-600 mr-3" />
+                <h4 className="text-lg font-semibold text-gray-900">Gestión de Riesgos</h4>
+              </div>
+              <p className="text-gray-600 mb-4">
+                Validaciones automáticas y alertas en tiempo real para prevenir errores 
+                y proteger los recursos del Estado.
+              </p>
+              <ul className="text-sm text-gray-500 space-y-2">
+                <li>• Validaciones automáticas</li>
+                <li>• Alertas de stock bajo</li>
+                <li>• Controles preventivos</li>
+              </ul>
+            </div>
+
+            {/* Eje Supervisión */}
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <div className="flex items-center mb-4">
+                <Eye className="h-8 w-8 text-purple-600 mr-3" />
+                <h4 className="text-lg font-semibold text-gray-900">Supervisión</h4>
+              </div>
+              <p className="text-gray-600 mb-4">
+                Módulo de auditoría completo que registra todas las acciones para garantizar 
+                la rendición de cuentas y supervisión efectiva.
+              </p>
+              <ul className="text-sm text-gray-500 space-y-2">
+                <li>• Registro de auditoría</li>
+                <li>• Trazabilidad completa</li>
+                <li>• Reportes de supervisión</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* Stats Section */}
+        <div className="py-16 bg-white rounded-lg shadow-lg mb-16">
+          <div className="text-center mb-8">
+            <h3 className="text-2xl font-bold text-gray-900 mb-4">
+              Diseñado para Entidades Públicas
+            </h3>
+            <p className="text-gray-600">
+              Cumple con los estándares de control interno para el sector público
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+            <div>
+              <div className="text-3xl font-bold text-blue-600 mb-2">100%</div>
+              <div className="text-gray-600">Trazabilidad</div>
+            </div>
+            <div>
+              <div className="text-3xl font-bold text-green-600 mb-2">24/7</div>
+              <div className="text-gray-600">Monitoreo</div>
+            </div>
+            <div>
+              <div className="text-3xl font-bold text-purple-600 mb-2">3 Roles</div>
+              <div className="text-gray-600">Segregación</div>
+            </div>
+          </div>
         </div>
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+
+      {/* Footer */}
+      <footer className="bg-gray-900 text-white py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <div className="flex items-center justify-center mb-4">
+              <Shield className="h-6 w-6 text-blue-400 mr-2" />
+              <span className="text-lg font-semibold">Inventario Integridad</span>
+            </div>
+            <p className="text-gray-400">
+              Sistema desarrollado para la Facultad de Ingeniería - 
+              Escuela de Formación Profesional de Sistemas y Computación
+            </p>
+          </div>
+        </div>
       </footer>
     </div>
   );
