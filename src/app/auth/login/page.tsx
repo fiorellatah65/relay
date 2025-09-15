@@ -448,7 +448,7 @@
 
 
 // app/auth/login/page.tsx
-// app/auth/login/page.tsx
+
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -457,7 +457,7 @@ import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 type FormData = { 
@@ -465,8 +465,7 @@ type FormData = {
   password: string; 
 };
 
-// Componente separado que usa useSearchParams
-function LoginForm() {
+export default function LoginPage() {
   const form = useForm<FormData>({
     defaultValues: {
       email: '',
@@ -477,38 +476,32 @@ function LoginForm() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [isInitializing, setIsInitializing] = useState(true);
 
-  // Verificar autenticación existente sin useSearchParams
+  // Verificación inicial más simple
   useEffect(() => {
     let mounted = true;
 
-    const checkExistingAuth = async () => {
+    const checkAuth = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
+        const { data: { session } } = await supabase.auth.getSession();
         
-        if (error) {
-          console.error('Error verificando sesión:', error);
-          return;
-        }
-
         if (session && mounted) {
-          console.log('Sesión existente encontrada, redirigiendo...');
-          
-          // Forzar redirección a dashboard admin por defecto
-          window.location.href = '/dashboard/admin';
+          // Si ya hay sesión, redirigir directamente sin obtener perfil
+          // El middleware se encargará de la redirección correcta
+          window.location.replace('/dashboard/admin');
           return;
         }
-      } catch (err) {
-        console.error('Error en verificación de auth:', err);
+      } catch (error) {
+        console.error('Error verificando sesión:', error);
       } finally {
         if (mounted) {
-          setIsCheckingAuth(false);
+          setIsInitializing(false);
         }
       }
     };
 
-    checkExistingAuth();
+    checkAuth();
 
     return () => {
       mounted = false;
@@ -520,17 +513,12 @@ function LoginForm() {
     setError(null);
     
     try {
-      console.log('Intentando login...');
-      
-      // Realizar login
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
       });
 
       if (authError) {
-        console.error('Error de auth:', authError);
-        
         switch (authError.message) {
           case 'Invalid login credentials':
             setError('Email o contraseña incorrectos');
@@ -552,58 +540,8 @@ function LoginForm() {
         return;
       }
 
-      console.log('Login exitoso, usuario:', authData.user.email);
-
-      // Esperar un momento para que la sesión se establezca
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      // Intentar obtener perfil con múltiples estrategias
-      let redirectPath = '/dashboard/admin'; // Default para admin
-      
-      try {
-        // Estrategia 1: Consulta directa
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('role, is_active')
-          .eq('id', authData.user.id)
-          .single();
-
-        if (profile && !profileError) {
-          console.log('Rol obtenido:', profile.role);
-          
-          // Verificar si está activo
-          if (profile.is_active === false) {
-            await supabase.auth.signOut();
-            setError('Tu cuenta está desactivada. Contacta al administrador.');
-            return;
-          }
-
-          // Determinar ruta según rol
-          switch (profile.role) {
-            case 'admin':
-              redirectPath = '/dashboard/admin';
-              break;
-            case 'supervisor':
-              redirectPath = '/dashboard/supervisor';
-              break;
-            case 'operador':
-              redirectPath = '/dashboard/operador';
-              break;
-            default:
-              redirectPath = '/dashboard';
-          }
-        } else {
-          console.warn('No se pudo obtener perfil, usando default admin');
-        }
-      } catch (profileErr) {
-        console.warn('Error obteniendo perfil:', profileErr);
-        // Continuar con ruta por defecto
-      }
-
-      console.log('Redirigiendo a:', redirectPath);
-      
-      // Usar window.location para evitar problemas de middleware
-      window.location.href = redirectPath;
+      // Redirección simple - el middleware se encarga del resto
+      window.location.replace('/dashboard/admin');
       
     } catch (err) {
       console.error('Error inesperado:', err);
@@ -613,7 +551,7 @@ function LoginForm() {
     }
   };
 
-  if (isCheckingAuth) {
+  if (isInitializing) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
         <div className="text-center">
@@ -719,21 +657,5 @@ function LoginForm() {
         </div>
       </div>
     </div>
-  );
-}
-
-// Componente principal con Suspense
-export default function Login() {
-  return (
-    <Suspense fallback={
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-sm text-gray-600">Cargando...</p>
-        </div>
-      </div>
-    }>
-      <LoginForm />
-    </Suspense>
   );
 }
